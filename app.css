@@ -6,3 +6,7 @@
     padding-top: 3px;
     padding-bottom: 8px;
 }
+.changesetContainer {
+    margin: 5px;
+    border-top: 2px solid #085478; /*std Rally muted blue*/
+}

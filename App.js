@@ -32,7 +32,7 @@ Ext.define('CustomApp', {
     //private method for replacing all instances of targetStr in txt with replacementStr
     _replace: function (txt, targetStr, replacementStr) {
         var currentStr, newTxt;
-        var i, cnt = 0,
+        var i,
             ln = targetStr.length,
             newTxtPause;
         for (i = 0; i < txt.length - ln + 1; i++) {
@@ -43,13 +43,11 @@ Ext.define('CustomApp', {
                     newTxt += replacementStr;
                     i += ln - 1;
                     newTxtPause = i + 1;
-                    cnt++;
                 } else {
                     newTxt += txt.slice(newTxtPause, i);
                     newTxt += replacementStr;
                     i += ln - 1;
                     newTxtPause = i + 1;
-                    cnt++;
                 }
             }
         }
@@ -59,23 +57,7 @@ Ext.define('CustomApp', {
             newTxt += txt.slice(newTxtPause, txt.length);
         }
 
-        return {
-            outputString: newTxt,
-            replacements: cnt
-        };
-    },
-
-    //private method for locating all instances of the substring targetStr in txt.
-    _matches: function (txt, targetStr) {
-        var currentStr, hits = [];
-        var i, ln = targetStr.length;
-        for (i = 0; i < txt.length - ln + 1; i++) {
-            currentStr = txt.slice(i, i + ln);
-            if (currentStr === targetStr) {
-                hits.push(i);
-            }
-        }
-        return (hits.length > 0) ? hits : null;
+        return newTxt;
     },
 
     //eliminates multiple spaces, leading spaces, and trailing spaces from a string
@@ -110,15 +92,15 @@ Ext.define('CustomApp', {
 
     _buildHTML: function (record) {
         var compactMessage = record.get('Message'),
-            changes = record.get('Changes');
+            changes = record.get('Changes'),
+			forComparison;
         var i, j,
             actionAndPath,
             breakNext = false,
-            matches, lastMatch_Index;
+            match_Index, lastMatch_Index;
         var messageLength = compactMessage.length,
             numChangedFiles = changes.length;
         var changedFiles = numChangedFiles > 0;
-        var replacementObject, replacementCnt = 0;
         var text;
         var easterEgg = false;
         text = record.get('SCMRepository').Name + " " + record.get('SCMRepository').SCMType + ' Check-in <div style=padding-left:7px;>';
@@ -127,30 +109,29 @@ Ext.define('CustomApp', {
         //As the files changed in the revision are often listed in the message, compactMessage is used in place of record.get('Message') to avoid redundancy.
         //compactMessage is a version of record.get('Message') with all the names of the files changed during the revision removed.
         if (changedFiles) {
+			
             for (i = 0; i < numChangedFiles; i++) {
-                replacementObject = this._replace(compactMessage, record.get('Changes')[i].Action + ' ' + record.get('Changes')[i].PathAndFilename, '');
-                compactMessage = replacementObject.outputString;
-                replacementCnt += replacementObject.replacements;
+                compactMessage = this._replace(compactMessage, record.get('Changes')[i].Action + ' ' + record.get('Changes')[i].PathAndFilename, '');
             }
             //the maximum allowable length of record.get('Message') is 3999. If the message has hit this limit because of its concatenation with the files changed,  
             //the list of files changed will likely have been cut-off, and additional screening will be required to remove the excess cut-off file path names.
             if (messageLength === 3999) {
+				forComparison = compactMessage;
                 easterEgg = true;
-                for (j = 0; j < changes.length; j++) {
+                for (j = 0; j < numChangedFiles; j++) {
                     actionAndPath = changes[j].Action + ' ' + changes[j].PathAndFilename;
                     for (i = actionAndPath.length - 1; i > 0; i--) {
-                        matches = this._matches(compactMessage, actionAndPath.slice(0, i));
+                        forComparison = compactMessage.replace(actionAndPath.slice(0, i), '');
                         //looks for parts of "change.Action + ' ' + change.PathAndFilename" in compactMessage.
                         //will only record a hit if it's at the very end of compactMessage.
-                        if (matches !== null && matches[matches.length - 1] + i === compactMessage.length) {
-                            lastMatch_Index = matches.pop();
+                        if (forComparison === compactMessage.slice(0, compactMessage.length - i)) {
+							compactMessage = forComparison;
                             breakNext = true;
                             break;
                         }
                     }
                     if (breakNext) break;
                 }
-                compactMessage = compactMessage.slice(0, lastMatch_Index);
             }
         }
         compactMessage = this._reduceSpaces(compactMessage);
