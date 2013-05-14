@@ -29,8 +29,8 @@ Ext.define('CustomApp', {
     //private method for replacing all instances of replaceThis in txt with withThis
     _replace: function (txt, replaceThis, withThis) {
         var re = new RegExp(replaceThis, 'g');
-		txt = txt.replace(re, withThis);
-		return txt;
+        txt = txt.replace(re, withThis);
+        return txt;
     },
 
     //eliminates multiple spaces, leading spaces, and trailing spaces from a string
@@ -66,7 +66,7 @@ Ext.define('CustomApp', {
     _buildHTML: function (record) {
         var compactMessage = record.get('Message'),
             changes = record.get('Changes'),
-			forComparison;
+            forComparison;
         var i, j,
             actionAndPath,
             breakNext = false,
@@ -90,11 +90,11 @@ Ext.define('CustomApp', {
                 for (j = 0; j < numChangedFiles; j++) {
                     actionAndPath = changes[j].Action + ' ' + changes[j].PathAndFilename;
                     for (i = actionAndPath.length - 1; i > 0; i--) {
-			forComparison = compactMessage.replace(actionAndPath.slice(0, i), '');
+            forComparison = compactMessage.replace(actionAndPath.slice(0, i), '');
                         //looks for parts of "change.Action + ' ' + change.PathAndFilename" in compactMessage.
                         //will only record a hit if it's at the very end of compactMessage.
                         if (forComparison === compactMessage.slice(0, compactMessage.length - i)) {
-			    compactMessage = forComparison;
+                compactMessage = forComparison;
                             breakNext = true;
                             break;
                         }
@@ -104,7 +104,7 @@ Ext.define('CustomApp', {
             }
         }
         compactMessage = this._reduceSpaces(compactMessage);
-		
+        
         text += record.get('Revision') !== null ? 'Message: ' + this._formatMessage(compactMessage, record.get('Artifacts')[0]) + '<br /><br />' : 'Message: ' + compactMessage + '<br /><br />';
 
         if (changedFiles) {

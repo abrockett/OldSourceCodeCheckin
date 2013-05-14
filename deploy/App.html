@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SourceCodeCheckin</title>
+
+    <script type="text/javascript" src="/apps/2.0p5/sdk.js"></script>
+
+    <script type="text/javascript">
+        Rally.onReady(function () {
+                Ext.define("CustomApp",{extend:"Rally.app.App",componentCls:"app",items:[{xtype:"container",itemId:"content"}],launch:function(){Ext.create("Rally.data.WsapiDataStore",{model:"Changeset",autoLoad:!0,fetch:["Changes","SCMRepository","Revision","SCMType","Message","Action","Uri","PathAndFilename","Author","Name","Artifacts","FormattedID"],sorters:[{property:"CreationDate",direction:"DESC"}],pageSize:20,listeners:{load:this._onChangeSetDataLoaded,scope:this}})},_replace:function(txt,replaceThis,withThis){var re=RegExp(replaceThis,"g");return txt=txt.replace(re,withThis)},_reduceSpaces:function(str){var splitArray=str.split(" "),cnt,compactStr="";for(cnt=0;splitArray.length>cnt;cnt++)""!==splitArray[cnt]&&(compactStr+=splitArray[cnt],compactStr+=" ");return compactStr=compactStr.replace(/\s$/,"")},_formatMessage:function(message,artifact){var formattedMsg=message,rallyId=artifact.FormattedID.toLowerCase(),matchStr=message.toLowerCase().match(rallyId);return null!==matchStr&&(formattedMsg=message.slice(0,matchStr.index),formattedMsg+="<a href="+Rally.util.Navigation.createRallyDetailUrl(artifact._ref,!1)+' target="_blank">'+message.slice(matchStr.index,matchStr.index+rallyId.length)+"</a>",formattedMsg+=message.slice(matchStr.index+rallyId.length)),formattedMsg},_buildHTML:function(record){var compactMessage=record.get("Message"),changes=record.get("Changes"),forComparison,i,j,actionAndPath,breakNext=!1,match_Index,lastMatch_Index,messageLength=compactMessage.length,numChangedFiles=changes.length,changedFiles=numChangedFiles>0,text;if(text=record.get("SCMRepository").Name+" "+record.get("SCMRepository").SCMType+" Check-in <div style=padding-left:7px;>",text+=null!==record.get("Author")?"Author: "+record.get("Author")._refObjectName+"<br />":"",text+=null!==record.get("Revision")?"Revision: "+record.get("Revision")+"<br />":"",changedFiles){for(i=0;numChangedFiles>i;i++)compactMessage=this._replace(compactMessage,record.get("Changes")[i].Action+" "+record.get("Changes")[i].PathAndFilename,"");if(3999===messageLength)for(j=0;numChangedFiles>j;j++){for(actionAndPath=changes[j].Action+" "+changes[j].PathAndFilename,i=actionAndPath.length-1;i>0;i--)if(forComparison=compactMessage.replace(actionAndPath.slice(0,i),""),forComparison===compactMessage.slice(0,compactMessage.length-i)){compactMessage=forComparison,breakNext=!0;break}if(breakNext)break}}if(compactMessage=this._reduceSpaces(compactMessage),text+=null!==record.get("Revision")?"Message: "+this._formatMessage(compactMessage,record.get("Artifacts")[0])+"<br /><br />":"Message: "+compactMessage+"<br /><br />",changedFiles)for(text+="Files Affected By Revision "+record.get("Revision")+"<br />",i=0;numChangedFiles>i;i++)text+=record.get("Changes")[i].Action+" <a href="+record.get("Changes")[i].Uri+' target="_blank">'+record.get("Changes")[i].PathAndFilename+"</a><br />";else text+="No affected files";return'<div class="changeset">'+text+"</div></div>"},_checkToBuildHTML:function(record){return record.get("SCMRepository")?this._buildHTML(record):'<div class="no_data">No source code check-ins.<br>There are either no check-in discussion post/changeset data or no Rally source code management connector has been installed. To get started, see the <a href=http://www.rallydev.com/help/source-code target="_blank">available</a> Rally source code management connectors.'},_onChangeSetDataLoaded:function(store,data){var newEntry,that=this;Ext.Array.each(data,function(record){newEntry=Ext.create("Ext.container.Container",{html:that._checkToBuildHTML(record),cls:"changesetContainer"}),that.down("#content").add(newEntry)})}});
+
+            Rally.launchApp('CustomApp', {
+                name:"SourceCodeCheckin",
+	            parentRepos:""
+            });
+
+        });
+    </script>
+
+
+    <style type="text/css">
+        .no_data {
+    margin: 20px;
+    text-align: center;
+}
+.changeset {
+    padding-top: 3px;
+    padding-bottom: 8px;
+}
+.changesetContainer {
+    margin: 5px;
+    border-top: 2px solid #085478; /*std Rally muted blue*/
+}
+    </style>
+</head>
+<body></body>
+</html>
